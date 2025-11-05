@@ -1,9 +1,12 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 import secrets
-
+from fastapi import FastAPI, UploadFile, File, HTTPException
+import io
+import gpxpy
 from service import ActivityService
 from dao import UtilisateurDAO, AcitivityDAO
+from main import parse_strava_gpx
 
 # ------------- Authentification Basique ------------------
 
@@ -30,6 +33,9 @@ def get_current_user(credentials: HTTPBasicCredentials = Depends(security)):
 @app.get("/f1")
 def me(user = Depends(get_current_user)):
     return {"user": user}
+
+
+
 # ----------------------------------------------------------
 
 
@@ -49,3 +55,10 @@ def create_activity(user_id):
 def get_feed(user_id):
     activities = ActivityService().get_feed(user_id)
     return activities
+
+@app.post("/upload-gpx")
+async def upload_gpx(file: UploadFile = File(...)):
+    # Lecture du contenu du fichier (texte)
+    content = await file.read()
+    # Parsing
+    return parse_strava_gpx(content)
